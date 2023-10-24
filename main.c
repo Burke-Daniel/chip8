@@ -133,107 +133,149 @@ bool parse_program(FILE *program, uint16_t *program_opcodes, size_t *length)
     while (program_counter < *length)
     {
         uint16_t opcode = program_opcodes[program_counter];
-        if ((opcode & CLEAR_SCREEN) == 0x00E0)
+        if ((opcode & 0x00F0) == 0x00E0)
         {
-            printf("Found CLEAR_SCREEN instruction\n");
+            switch(opcode)
+            {
+            case 0x00E0:
+                printf("Found CLEAR_SCREEN instruction\n");
+                break;
+            case 0x00EE:
+                printf("Found RETURN_SUBROUTINE instruction\n");
+                break;
+            default:
+                printf("Invalid instruction: 0x%04x\n", opcode);
+                break;
+            }
         }
-        if (is_instruction(program_opcodes[program_counter], RETURN_SUBROUTINE))
+        else if ((opcode & 0xF000) == 0x1000)
         {
+            printf("Found JUMP_ADDR instruction\n");
         }
-        if (is_instruction(program_opcodes[program_counter], JUMP_ADDR))
+        else if ((opcode & 0xF000) == 0x2000)
         {
+            printf("Found CALL instruction\n");
         }
-        if (is_instruction(program_opcodes[program_counter], CALL))
+        else if ((opcode & 0xF000) == 0x3000)
         {
+            printf("Found SE Vx, byte instruction\n");
         }
-        if (is_instruction(program_opcodes[program_counter], SKIP_IF_EQ_IMM))
+        else if ((opcode & 0xF000) == 0x4000)
         {
+            printf("Found SNE Vx, byte instruction\n");
         }
-        if (is_instruction(program_opcodes[program_counter], SKIP_IF_NEQ_IMM))
+        else if ((opcode & 0xF000) == 0x5000)
         {
+            printf("Found SE Vx, Vy instruction\n");
         }
-        if (is_instruction(program_opcodes[program_counter], SKIP_IF_EQ))
+        else if ((opcode & 0xF000) == 0x6000)
         {
+            printf("Found LD Vx, byte instruction\n");
         }
-        if (is_instruction(program_opcodes[program_counter], ASSIGN_VX_IMM))
+        else if ((opcode & 0xF000) == 0x7000)
         {
+            printf("Found ADD Vx, byte instruction\n");
         }
-        if (is_instruction(program_opcodes[program_counter], ADD_VX_IMM))
+        else if ((opcode & 0xF000) == 0x8000)
         {
+            uint16_t sub_code = opcode & 0x000F;
+            switch(sub_code)
+            {
+            case 0x0:
+                printf("Found LD Vx, Vy instruction\n");
+                break;
+            case 0x1:
+                printf("Found OR Vx, Vy instruction\n");
+                break;
+            case 0x2:
+                printf("Found AND Vx, Vy instruction\n");
+                break;
+            case 0x3:
+                printf("Found XOR Vx, Vy instruction\n");
+                break;
+            case 0x4:
+                printf("Found ADD Vx, Vy instruction\n");
+                break;
+            case 0x5:
+                printf("Found SUB Vx, Vy instruction\n");
+                break;
+            case 0x6:
+                printf("Found SHR Vx, Vy instruction\n");
+                break;
+            case 0x7:
+                printf("Found SUBN Vx, Vy instruction\n");
+                break;
+            case 0xE:
+                printf("Found SHL Vx, Vy instruction\n");
+                break;
+            default:
+                printf("Invalid instruction: 0x%04x\n", opcode);
+                break;
+            }
         }
-        if (is_instruction(program_opcodes[program_counter], ASSIGN_VX_VY))
+        else if ((opcode & 0xF00F) == 0x9000)
         {
+            printf("Found SNE Vx, Vy instruction\n");
         }
-        if (is_instruction(program_opcodes[program_counter], OR_VX_VY))
+        else if ((opcode & 0xF000) == 0xA000)
         {
+            printf("Found LD I, addr instruction\n");
         }
-        if (is_instruction(program_opcodes[program_counter], AND_VX_VY))
+        else if ((opcode & 0xF000) == 0xB000)
         {
+            printf("Found JP V0, addr instruction\n");
         }
-        if (is_instruction(program_opcodes[program_counter], XOR_VX_VY))
+        else if ((opcode & 0xF000) == 0xC000)
         {
+            printf("Found RND Vx, byte instruction\n");
         }
-        if (is_instruction(program_opcodes[program_counter], ADD_VX_VY))
+        else if ((opcode & 0xF000) == 0xD000)
         {
+            printf("Found DRW Vx, Vy nibble instruction\n");
         }
-        if (is_instruction(program_opcodes[program_counter], SUB_VX_VY))
+        else if ((opcode & 0xF0FF) == 0xE09E)
         {
+            printf("Found SKP Vx instruction\n");
         }
-        if (is_instruction(program_opcodes[program_counter], RIGHT_SHIFT_VX_VY))
+        else if ((opcode & 0xF0FF) == 0xE0A1)
         {
+            printf("Found SKNP Vx instruction\n");
         }
-        if (is_instruction(program_opcodes[program_counter], VX_SUB_VY))
+        else if ((opcode & 0xF000) == 0xF000)
         {
-        }
-        if (is_instruction(program_opcodes[program_counter], LEFT_SHIFT_VX_VY))
-        {
-        }
-        if (is_instruction(program_opcodes[program_counter], SET_I_ADDR))
-        {
-        }
-        if (is_instruction(program_opcodes[program_counter], JUMP_PLUS_V0))
-        {
-        }
-        if (is_instruction(program_opcodes[program_counter], RAND))
-        {
-        }
-        if (is_instruction(program_opcodes[program_counter], DRAW_SPRITE))
-        {
-        }
-        if (is_instruction(program_opcodes[program_counter], SKIP_IF_KEY_PRESSED))
-        {
-        }
-        if (is_instruction(program_opcodes[program_counter], SKIP_IF_KEY_NOT_PRESSED))
-        {
-        }
-        if (is_instruction(program_opcodes[program_counter], SET_VX_TIMER))
-        {
-        }
-        if (is_instruction(program_opcodes[program_counter], KEY_AWAIT_STORE))
-        {
-        }
-        if (is_instruction(program_opcodes[program_counter], SET_DELAY_TIMER))
-        {
-        }
-        if (is_instruction(program_opcodes[program_counter], SET_SOUND_TIMER))
-        {
-        }
-        if (is_instruction(program_opcodes[program_counter], ADD_I_VX))
-        {
-        }
-        if (is_instruction(program_opcodes[program_counter], SET_I_SPRITE_LOCATION))
-        {
-        }
-        if (is_instruction(program_opcodes[program_counter], SET_BCD_VX))
-        {
-        }
-        if (is_instruction(program_opcodes[program_counter], REG_DUMP))
-        {
-        }
-        if (is_instruction(program_opcodes[program_counter], REG_LOAD))
-        {
-        }
+            uint16_t sub_word = opcode & 0x00FF;
+            switch (sub_word)
+            {
+            case 0x07:
+                printf("Found LD Vx, DT instruction\n");
+                break;
+            case 0x0A:
+                printf("Found LD Vx, K instruction\n");
+                break;
+            case 0x15:
+                printf("Found LD DT, Vx instruction\n");
+                break;
+            case 0x18:
+                printf("Found LD ST, Vx instruction\n");
+                break;
+            case 0x1E:
+                printf("Found ADD I, Vx instruction\n");
+                break;
+            case 0x29:
+                printf("Found LD F, Vx instruction\n");
+                break;
+            case 0x33:
+                printf("Found LD F, Vx instruction\n");
+                break;
+            case 0x55:
+                printf("Found LD [I], Vx instruction\n");
+                break;
+            case 0x65:
+                printf("Found LD Vx, [I] instruction\n");
+                break;
+            }
 
+        }
         program_counter++;
     }
 
