@@ -313,7 +313,9 @@ void execute_instruction(uint16_t opcode)
         uint8_t vx = (opcode & 0x0F00) >> 8;
         uint8_t val = (opcode & 0x00FF);
         printf("Registers[%d] += %d\n", vx, val);
+        printf("Before Register[%d] = %d\n", vx, registers.V[vx]);
         registers.V[vx] += val;
+        printf("After Register[%d] = %d\n", vx, registers.V[vx]);
         program_counter += INSTRUCTION_SIZE;
     }
     else if ((opcode & 0xF000) == 0x8000)
@@ -469,24 +471,24 @@ void execute_instruction(uint16_t opcode)
 		uint8_t sprite_height = opcode & 0x000F;
 		uint8_t x_location = registers.V[target_v_reg_x];
 		uint8_t y_location = registers.V[target_v_reg_y];
-		uint8_t pixel;
+
+        printf("Drawing at x=%d y=%d using memory starting at I=0x%x\n", x_location, y_location, I);
 
 		registers.VF = 0;
-		for (int y_coordinate = 0; y_coordinate < sprite_height; y_coordinate++)
-		{
-			pixel = memory[I + y_coordinate];
-			for (int x_coordinate = 0; x_coordinate < 8; x_coordinate++)
-			{
-				if ((pixel & (0x80 >> x_coordinate)) != 0)
-				{
-					if (display[y_location + y_coordinate][x_location + x_coordinate] == 1)
-					{
-						registers.VF = 1;
-					}
-					display[y_location + y_coordinate][x_location + x_coordinate] ^= 1;
-				}
-			}
-		}
+        for (int32_t i = 0; i < sprite_height; i++)
+        {
+            uint8_t sprite = memory[I + i];
+            printf("Sprite: 0x%x\n", sprite);
+
+            for (size_t j = 0; j < 8; j++)
+            {
+                printf("Drawing X %d Y %d\n", y_location + i, x_location + j);
+                bool bit = sprite & (1 << (7-j));
+                printf("Bit at %d is %d\n", j, bit);
+                display[x_location + j][y_location + i + 1] ^= bit;
+                // TODO set VF
+            }
+        }
 
         program_counter += INSTRUCTION_SIZE;
     }
@@ -721,13 +723,13 @@ int main(int argc, char** argv)
     }
     printf("\n");
 
-    printf("\nAfter big->little endian conversion:\n");
-    for (int i = 0; i < length; i++)
-    {
-        program_opcodes[i] = (program_opcodes[i] >> 8) | (program_opcodes[i] << 8);
-        printf("0x%04x ", program_opcodes[i]);
-    }
-    printf("\n");
+    //printf("\nAfter big->little endian conversion:\n");
+    //for (int i = 0; i < length; i++)
+    //{
+    //    program_opcodes[i] = (program_opcodes[i] >> 8) | (program_opcodes[i] << 8);
+    //    printf("0x%04x ", program_opcodes[i]);
+    //}
+    //printf("\n");
 
 
     printf("Program length: %lu\n", length);
@@ -744,7 +746,8 @@ int main(int argc, char** argv)
     printf("After putting in memory:\n");
     for (int i = 0x200; i < 0x200 + (2 * length); i += 2)
     {
-        printf("0x%02x%02x ", memory[i+1], memory[i]);
+        // printf("0x%02x%02x ", memory[i+1], memory[i]);
+        printf("0x%02x%02x ", memory[i], memory[i+1]);
     }
     printf("\n");
 
@@ -782,6 +785,11 @@ int main(int argc, char** argv)
             /* if (program_counter < 0x200 + (sizeof(uint16_t) * length)) */
             /* { */
                 uint16_t instruction = *(uint16_t*)(memory + program_counter);
+
+                uint8_t inst_low = (uint8_t)(instruction & 0xff);
+                uint8_t inst_high = (uint8_t)((instruction & 0xff00) >> 8);
+
+                instruction = ((uint16_t)inst_low << 8) | (uint16_t)inst_high;
                 execute_instruction(instruction);
                 printf("\n");
 
