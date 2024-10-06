@@ -11,6 +11,14 @@
 
 #include "raylib.h"
 
+/* #define DEBUG */
+
+#ifdef DEBUG
+#define DEBUG_PRINT printf
+#else
+#define DEBUG_PRINT
+#endif
+
 #define CHIP8_MEMORY_SIZE 4096U
 #define CHIP8_STACK_SIZE 16U
 
@@ -89,7 +97,7 @@ void stack_push(Stack* stack, uint16_t val)
 {
     if (stack->stack_pointer + 1 > 16)
     {
-        printf("WARNING: STACK OVERFLOW\n");
+        DEBUG_PRINT("WARNING: STACK OVERFLOW\n");
         return;
     }
     
@@ -102,7 +110,7 @@ uint16_t stack_pop(Stack* stack)
 {
     if (stack->stack_pointer == 0)
     {
-        printf("WARNING: popping from empty stack\n");
+        DEBUG_PRINT("WARNING: popping from empty stack\n");
         return 0;
     }
 
@@ -191,71 +199,71 @@ void dump_program(const char *program_name)
     int c;
     while ((c = fgetc(program)) != EOF)
     {
-        printf("0x%x ", c);
+        DEBUG_PRINT("0x%x ", c);
     }
-    printf("\n");
+    DEBUG_PRINT("\n");
     fclose(program);
 }
 
 void dump_display_memory()
 {
-    printf("Display Memory");
+    DEBUG_PRINT("Display Memory");
 	for (int i = 0; i < WIDTH; i++)
     {
         for (int j = 0; j < HEIGHT; j++)
         {
-            printf("0x%02x  ", display[i][j]);
+            DEBUG_PRINT("0x%02x  ", display[i][j]);
         }
-        printf("\n");
+        DEBUG_PRINT("\n");
     }
 }
 
 void execute_instruction(uint16_t opcode)
 {
-    printf("Opcode: 0x%04x\n", opcode);
+    DEBUG_PRINT("Opcode: 0x%04x\n", opcode);
     if ((opcode & 0x00F0) == 0x00E0)
     {
         switch(opcode)
         {
         case 0x00E0:
         {
-            printf("Found CLEAR_SCREEN instruction\n");
+            DEBUG_PRINT("Found CLEAR_SCREEN instruction\n");
             memset(display, 0, 32 * 64);
             program_counter += INSTRUCTION_SIZE;
             break;
         }
         case 0x00EE:
         {
-            printf("Found RETURN_SUBROUTINE instruction\n");
+            DEBUG_PRINT("Found RETURN_SUBROUTINE instruction\n");
             program_counter = stack_pop(&stack);
             break;
         }
         default:
-            printf("Invalid instruction: 0x%04x\n", opcode);
+            DEBUG_PRINT("Invalid instruction: 0x%04x\n", opcode);
             break;
         }
     }
     else if ((opcode & 0xF000) == 0x1000)
     {
-        printf("Found JUMP_ADDR instruction\n");
+        DEBUG_PRINT("Found JUMP_ADDR instruction\n");
         uint16_t value = opcode & 0x0FFF;
-        printf("Setting program counter to %d\n", value);
+        DEBUG_PRINT("Setting program counter to %d\n", value);
         program_counter = value;
     }
     else if ((opcode & 0xF000) == 0x2000)
     {
-        printf("Found CALL instruction\n");
+        DEBUG_PRINT("Found CALL instruction\n");
         uint16_t value = opcode & 0x0FFF;
-        printf("Calling function at address %d\n", value);
+        DEBUG_PRINT("Calling function at address %d\n", value);
         stack_push(&stack, program_counter);
         program_counter = value;
     }
     else if ((opcode & 0xF000) == 0x3000)
     {
-        printf("Found SE Vx, byte instruction\n");
+        DEBUG_PRINT("Found SE Vx, byte instruction\n");
         uint8_t vx = (opcode & 0x0F00) >> 8;
         uint8_t val = (opcode & 0x00FF);
-        printf("Registers[%d] == %d\n", vx, val);
+        DEBUG_PRINT("Registers[%d] == %d\n", vx, val);
 
         if (registers.V[vx] == val)
         {
@@ -268,10 +276,10 @@ void execute_instruction(uint16_t opcode)
     }
     else if ((opcode & 0xF000) == 0x4000)
     {
-        printf("Found SNE Vx, byte instruction\n");
+        DEBUG_PRINT("Found SNE Vx, byte instruction\n");
         uint8_t vx = (opcode & 0x0F00) >> 8;
         uint8_t val = (opcode & 0x00FF);
-        printf("Registers[%d] != %d\n", vx, val);
+        DEBUG_PRINT("Registers[%d] != %d\n", vx, val);
 
         if (registers.V[vx] != val)
         {
@@ -284,10 +292,10 @@ void execute_instruction(uint16_t opcode)
     }
     else if ((opcode & 0xF000) == 0x5000)
     {
-        printf("Found SE Vx, Vy instruction\n");
+        DEBUG_PRINT("Found SE Vx, Vy instruction\n");
         uint8_t vx = (opcode & 0x0F00) >> 8;
         uint8_t vy = (opcode & 0x00F0) >> 4;
-        printf("Registers[%d] == Registers[%d]\n", vx, vy);
+        DEBUG_PRINT("Registers[%d] == Registers[%d]\n", vx, vy);
 
         if (registers.V[vx] == registers.V[vy])
         {
@@ -300,22 +308,22 @@ void execute_instruction(uint16_t opcode)
     }
     else if ((opcode & 0xF000) == 0x6000)
     {
-        printf("Found LD Vx, byte instruction\n");
+        DEBUG_PRINT("Found LD Vx, byte instruction\n");
         uint8_t vx = (opcode & 0x0F00) >> 8;
         uint8_t val = (opcode & 0x00FF);
-        printf("Registers[%d] = %d\n", vx, val);
+        DEBUG_PRINT("Registers[%d] = %d\n", vx, val);
         registers.V[vx] = val;
         program_counter += INSTRUCTION_SIZE;
     }
     else if ((opcode & 0xF000) == 0x7000)
     {
-        printf("Found ADD Vx, byte instruction\n");
+        DEBUG_PRINT("Found ADD Vx, byte instruction\n");
         uint8_t vx = (opcode & 0x0F00) >> 8;
         uint8_t val = (opcode & 0x00FF);
-        printf("Registers[%d] += %d\n", vx, val);
-        printf("Before Register[%d] = %d\n", vx, registers.V[vx]);
+        DEBUG_PRINT("Registers[%d] += %d\n", vx, val);
+        DEBUG_PRINT("Before Register[%d] = %d\n", vx, registers.V[vx]);
         registers.V[vx] += val;
-        printf("After Register[%d] = %d\n", vx, registers.V[vx]);
+        DEBUG_PRINT("After Register[%d] = %d\n", vx, registers.V[vx]);
         program_counter += INSTRUCTION_SIZE;
     }
     else if ((opcode & 0xF000) == 0x8000)
@@ -325,50 +333,50 @@ void execute_instruction(uint16_t opcode)
         {
         case 0x0:
         {
-            printf("Found LD Vx, Vy instruction\n");
+            DEBUG_PRINT("Found LD Vx, Vy instruction\n");
             uint8_t vx = (opcode & 0x0F00) >> 8;
             uint8_t vy = (opcode & 0x00F0) >> 4;
-            printf("registers[%d] = registers[%d]\n", vx, vy);
+            DEBUG_PRINT("registers[%d] = registers[%d]\n", vx, vy);
             registers.V[vx] = registers.V[vy];
             program_counter += INSTRUCTION_SIZE;
             break;
         }
         case 0x1:
         {
-            printf("Found OR Vx, Vy instruction\n");
+            DEBUG_PRINT("Found OR Vx, Vy instruction\n");
             uint8_t vx = (opcode & 0x0F00) >> 8;
             uint8_t vy = (opcode & 0x00F0) >> 4;
-            printf("registers[%d] |= registers[%d]\n", vx, vy);
+            DEBUG_PRINT("registers[%d] |= registers[%d]\n", vx, vy);
             registers.V[vx] |= registers.V[vy];
             program_counter += INSTRUCTION_SIZE;
             break;
         }
         case 0x2:
         {
-            printf("Found AND Vx, Vy instruction\n");
+            DEBUG_PRINT("Found AND Vx, Vy instruction\n");
             uint8_t vx = (opcode & 0x0F00) >> 8;
             uint8_t vy = (opcode & 0x00F0) >> 4;
-            printf("registers[%d] &= registers[%d]\n", vx, vy);
+            DEBUG_PRINT("registers[%d] &= registers[%d]\n", vx, vy);
             registers.V[vx] &= registers.V[vy];
             program_counter += INSTRUCTION_SIZE;
             break;
         }
         case 0x3:
         {
-            printf("Found XOR Vx, Vy instruction\n");
+            DEBUG_PRINT("Found XOR Vx, Vy instruction\n");
             uint8_t vx = (opcode & 0x0F00) >> 8;
             uint8_t vy = (opcode & 0x00F0) >> 4;
-            printf("registers[%d] ^= registers[%d]\n", vx, vy);
+            DEBUG_PRINT("registers[%d] ^= registers[%d]\n", vx, vy);
             registers.V[vx] ^= registers.V[vy];
             program_counter += INSTRUCTION_SIZE;
             break;
         }
         case 0x4:
         {
-            printf("Found ADD Vx, Vy instruction\n");
+            DEBUG_PRINT("Found ADD Vx, Vy instruction\n");
             uint8_t vx = (opcode & 0x0F00) >> 8;
             uint8_t vy = (opcode & 0x00F0) >> 4;
-            printf("registers[%d] += registers[%d]\n", vx, vy);
+            DEBUG_PRINT("registers[%d] += registers[%d]\n", vx, vy);
             uint8_t val = registers.V[vx] + registers.V[vy];
             registers.VF = val > 255 ? 1 : 0;
             registers.V[vx] = val;
@@ -377,10 +385,10 @@ void execute_instruction(uint16_t opcode)
         }
         case 0x5:
         {
-            printf("Found SUB Vx, Vy instruction\n");
+            DEBUG_PRINT("Found SUB Vx, Vy instruction\n");
             uint8_t vx = (opcode & 0x0F00) >> 8;
             uint8_t vy = (opcode & 0x00F0) >> 4;
-            printf("registers[%d] -= registers[%d]\n", vx, vy);
+            DEBUG_PRINT("registers[%d] -= registers[%d]\n", vx, vy);
             uint8_t val = registers.V[vx] - registers.V[vy];
             registers.VF = registers.V[vx] > registers.V[vy] ? 1 : 0;
             registers.V[vx] = val;
@@ -389,9 +397,9 @@ void execute_instruction(uint16_t opcode)
         }
         case 0x6:
         {
-            printf("Found SHR Vx, { Vy } instruction\n");
+            DEBUG_PRINT("Found SHR Vx, { Vy } instruction\n");
             uint8_t vx = (opcode & 0x0F00) >> 8;
-            printf("registers[%d] >> 1\n", vx);
+            DEBUG_PRINT("registers[%d] >> 1\n", vx);
             uint8_t val = registers.V[vx] >> 1;
             registers.VF = registers.V[vx] & 0x1 ? 1 : 0;
             registers.V[vx] = val;
@@ -400,10 +408,10 @@ void execute_instruction(uint16_t opcode)
         }
         case 0x7:
         {
-            printf("Found SUBN Vx, Vy instruction\n");
+            DEBUG_PRINT("Found SUBN Vx, Vy instruction\n");
             uint8_t vx = (opcode & 0x0F00) >> 8;
             uint8_t vy = (opcode & 0x00F0) >> 4;
-            printf("registers[%d] -= registers[%d]\n", vy, vx);
+            DEBUG_PRINT("registers[%d] -= registers[%d]\n", vy, vx);
             uint8_t val = registers.V[vy] - registers.V[vx];
             registers.VF = registers.V[vy] > registers.V[vx] ? 1 : 0;
             registers.V[vx] = val;
@@ -412,25 +420,25 @@ void execute_instruction(uint16_t opcode)
         }
         case 0xE:
         {
-            printf("Found SHL Vx, Vy instruction\n");
+            DEBUG_PRINT("Found SHL Vx, Vy instruction\n");
             uint8_t vx = (opcode & 0x0F00) >> 8;
-            printf("registers[%d] << 1\n", vx);
+            DEBUG_PRINT("registers[%d] << 1\n", vx);
             uint8_t val = registers.V[vx] << 1;
             registers.VF = registers.V[vx] & 0x80 ? 1 : 0;
             registers.V[vx] = val;
             break;
         }
         default:
-            printf("Invalid instruction: 0x%04x\n", opcode);
+            DEBUG_PRINT("Invalid instruction: 0x%04x\n", opcode);
             break;
         }
     }
     else if ((opcode & 0xF00F) == 0x9000)
     {
-        printf("Found SNE Vx, Vy instruction\n");
+        DEBUG_PRINT("Found SNE Vx, Vy instruction\n");
         uint8_t vx = (opcode & 0x0F00) >> 8;
         uint8_t vy = (opcode & 0x00F0) >> 4;
-        printf("Skipping if registers[%d] != registers[%d]\n", vx, vy);
+        DEBUG_PRINT("Skipping if registers[%d] != registers[%d]\n", vx, vy);
         if (registers.V[vx] != registers.V[vy])
         {
             program_counter += 2 * INSTRUCTION_SIZE;
@@ -442,25 +450,25 @@ void execute_instruction(uint16_t opcode)
     }
     else if ((opcode & 0xF000) == 0xA000)
     {
-        printf("Found LD I, addr instruction\n");
+        DEBUG_PRINT("Found LD I, addr instruction\n");
         uint16_t val = opcode & 0x0FFF;
-        printf("I = 0x%x\n", val);
+        DEBUG_PRINT("I = 0x%x\n", val);
         I = val;
         program_counter += INSTRUCTION_SIZE;
     }
     else if ((opcode & 0xF000) == 0xB000)
     {
-        printf("Found JP V0, addr instruction\n");
+        DEBUG_PRINT("Found JP V0, addr instruction\n");
         uint16_t val = opcode & 0x0FFF;
-        printf("program_counter = registers[0] + %d\n", val);
+        DEBUG_PRINT("program_counter = registers[0] + %d\n", val);
         program_counter = registers.V0 + val;
     }
     else if ((opcode & 0xF000) == 0xC000)
     {
-        printf("Found RND Vx, byte instruction\n");
+        DEBUG_PRINT("Found RND Vx, byte instruction\n");
         uint8_t vx = (opcode & 0x0F00) >> 8;
         uint8_t val = (opcode & 0x00FF);
-        printf("Registers[%d] = rand() & %d\n", vx, val);
+        DEBUG_PRINT("Registers[%d] = rand() & %d\n", vx, val);
         registers.V[vx] = (rand() % 255) & val;
         program_counter += INSTRUCTION_SIZE;
     }
@@ -472,19 +480,19 @@ void execute_instruction(uint16_t opcode)
 		uint8_t x_location = registers.V[target_v_reg_x];
 		uint8_t y_location = registers.V[target_v_reg_y];
 
-        printf("Drawing at x=%d y=%d using memory starting at I=0x%x\n", x_location, y_location, I);
+        DEBUG_PRINT("Drawing at x=%d y=%d using memory starting at I=0x%x\n", x_location, y_location, I);
 
 		registers.VF = 0;
         for (int32_t i = 0; i < sprite_height; i++)
         {
             uint8_t sprite = memory[I + i];
-            printf("Sprite: 0x%x\n", sprite);
+            DEBUG_PRINT("Sprite: 0x%x\n", sprite);
 
             for (size_t j = 0; j < 8; j++)
             {
-                printf("Drawing X %d Y %d\n", y_location + i, x_location + j);
+                DEBUG_PRINT("Drawing X %d Y %d\n", y_location + i, x_location + j);
                 bool bit = sprite & (1 << (7-j));
-                printf("Bit at %d is %d\n", j, bit);
+                DEBUG_PRINT("Bit at %d is %d\n", j, bit);
                 display[x_location + j][y_location + i + 1] ^= bit;
                 // TODO set VF
             }
@@ -494,9 +502,9 @@ void execute_instruction(uint16_t opcode)
     }
     else if ((opcode & 0xF0FF) == 0xE09E)
     {
-        printf("Found SKP Vx instruction\n");
+        DEBUG_PRINT("Found SKP Vx instruction\n");
         uint8_t vx = (opcode & 0x0F00) >> 0x8;
-        printf("Skipping next instruction if key registers[%d] is pressed\n", vx);
+        DEBUG_PRINT("Skipping next instruction if key registers[%d] is pressed\n", vx);
         if (IsKeyPressed(keyboard_mapping[registers.V[vx]]))
         {
             program_counter += 2 * INSTRUCTION_SIZE;
@@ -508,9 +516,9 @@ void execute_instruction(uint16_t opcode)
     }
     else if ((opcode & 0xF0FF) == 0xE0A1)
     {
-        printf("Found SKNP Vx instruction\n");
+        DEBUG_PRINT("Found SKNP Vx instruction\n");
         uint8_t vx = (opcode & 0x0F00) >> 0x8;
-        printf("Skipping next instruction if key registers[%d] is pressed\n", vx);
+        DEBUG_PRINT("Skipping next instruction if key registers[%d] is pressed\n", vx);
         if (!IsKeyPressed(keyboard_mapping[registers.V[vx]]))
         {
             program_counter += 2 * INSTRUCTION_SIZE;
@@ -527,9 +535,9 @@ void execute_instruction(uint16_t opcode)
         {
         case 0x07:
         {
-            printf("Found LD Vx, DT instruction\n");
+            DEBUG_PRINT("Found LD Vx, DT instruction\n");
             uint8_t vx = (opcode & 0x0F00) >> 0x8;
-            printf("Setting register[%d] == DT value\n", vx);
+            DEBUG_PRINT("Setting register[%d] == DT value\n", vx);
             registers.V[vx] = delay_timer;
             program_counter += INSTRUCTION_SIZE;
             break;
@@ -537,9 +545,9 @@ void execute_instruction(uint16_t opcode)
         case 0x0A:
         {
             // TODO debug this
-            printf("Found LD Vx, K instruction\n");
+            DEBUG_PRINT("Found LD Vx, K instruction\n");
             uint8_t vx = (opcode & 0x0F00) >> 0x8;
-            printf("Waiting for keypress to store in registers[%d]\n", vx);
+            DEBUG_PRINT("Waiting for keypress to store in registers[%d]\n", vx);
             bool found_key = false;
             int key_pressed;
             while (!found_key)
@@ -553,7 +561,6 @@ void execute_instruction(uint16_t opcode)
                         break;
                     }
                 }
-                /* usleep(1000 * 50); */
             }
             registers.V[vx] = key_pressed;
             program_counter += INSTRUCTION_SIZE;
@@ -561,49 +568,49 @@ void execute_instruction(uint16_t opcode)
         }
         case 0x15:
         {
-            printf("Found LD DT, Vx instruction\n");
+            DEBUG_PRINT("Found LD DT, Vx instruction\n");
             uint8_t vx = (opcode & 0x0F00) >> 0x8;
-            printf("Setting DT == register[%d]\n", vx);
+            DEBUG_PRINT("Setting DT == register[%d]\n", vx);
             delay_timer = registers.V[vx];
             program_counter += INSTRUCTION_SIZE;
             break;
         }
         case 0x18:
         {
-            printf("Found LD ST, Vx instruction\n");
+            DEBUG_PRINT("Found LD ST, Vx instruction\n");
             uint8_t vx = (opcode & 0x0F00) >> 0x8;
-            printf("Setting ST == register[%d]\n", vx);
+            DEBUG_PRINT("Setting ST == register[%d]\n", vx);
             sound_timer = registers.V[vx];
             program_counter += INSTRUCTION_SIZE;
             break;
         }
         case 0x1E:
         {
-            printf("Found ADD I, Vx instruction\n");
+            DEBUG_PRINT("Found ADD I, Vx instruction\n");
             uint8_t vx = (opcode & 0x0F00) >> 0x8;
-            printf("Setting I += register[%d]\n", vx);
+            DEBUG_PRINT("Setting I += register[%d]\n", vx);
             I += registers.V[vx];
             program_counter += INSTRUCTION_SIZE;
             break;
         }
         case 0x29:
         {
-            printf("Found LD F, Vx instruction\n");
+            DEBUG_PRINT("Found LD F, Vx instruction\n");
             uint8_t vx = (opcode & 0x0F00) >> 0x8;
-            printf("Setting I hex sprite at register[%d]\n", vx);
+            DEBUG_PRINT("Setting I hex sprite at register[%d]\n", vx);
             I = 5 * registers.V[vx];
             program_counter += INSTRUCTION_SIZE;
             break;
         }
         case 0x33:
         {
-            printf("Found LD F, Vx instruction\n");
+            DEBUG_PRINT("Found LD F, Vx instruction\n");
             uint8_t vx = (opcode & 0x0F00) >> 0x8;
             uint16_t val = registers.V[vx];
             uint16_t hundreds = val / 100;
             uint16_t tens = (val - (100 * hundreds)) / 10;
             uint16_t ones = (val - (100 * hundreds) - (10 * tens));
-            printf("Putting %d at I, %d at I+1, %d at I+2\n", hundreds, tens, ones);
+            DEBUG_PRINT("Putting %d at I, %d at I+1, %d at I+2\n", hundreds, tens, ones);
 
             memory[I] = hundreds;
             memory[I+1] = tens;
@@ -613,18 +620,18 @@ void execute_instruction(uint16_t opcode)
         }
         case 0x55:
         {
-            printf("Found LD [I], Vx instruction\n");
+            DEBUG_PRINT("Found LD [I], Vx instruction\n");
             uint8_t vx = (opcode & 0x0F00) >> 0x8;
-            printf("Storing V0 to V%d in memory\n", vx);
+            DEBUG_PRINT("Storing V0 to V%d in memory\n", vx);
             memcpy(&memory[I], &registers.V[0], sizeof(registers.V[0]) * vx);
             program_counter += INSTRUCTION_SIZE;
             break;
         }
         case 0x65:
         {
-            printf("Found LD Vx, [I] instruction\n");
+            DEBUG_PRINT("Found LD Vx, [I] instruction\n");
             uint8_t vx = (opcode & 0x0F00) >> 0x8;
-            printf("Loading V0 to V%d from memory\n", vx);
+            DEBUG_PRINT("Loading V0 to V%d from memory\n", vx);
             memcpy(&registers.V[0], &memory[I], sizeof(registers.V[0]) * vx);
             program_counter += INSTRUCTION_SIZE;
             break;
@@ -645,25 +652,25 @@ int main(void)
         }
     }
 
-    printf("Before clearing screen:\n");
+    DEBUG_PRINT("Before clearing screen:\n");
     for (int i = 0; i < 64; i++)
     {
         for (int j = 0; j < 32; j++)
         {
-            printf("%d ", display[i][j]);
+            DEBUG_PRINT("%d ", display[i][j]);
         }
-        printf("\n");
+        DEBUG_PRINT("\n");
     }
 
     execute_instruction(0x00E0);
-    printf("After clearing screen:\n");
+    DEBUG_PRINT("After clearing screen:\n");
     for (int i = 0; i < 64; i++)
     {
         for (int j = 0; j < 32; j++)
         {
-            printf("%d ", display[i][j]);
+            DEBUG_PRINT("%d ", display[i][j]);
         }
-        printf("\n");
+        DEBUG_PRINT("\n");
     }
 }
 
@@ -700,7 +707,7 @@ int main(int argc, char** argv)
 
     fseek(program, 0L, SEEK_END);
     size_t program_size = ftell(program);
-    printf("The program is %lu bytes long\n", program_size);
+    DEBUG_PRINT("The program is %lu bytes long\n", program_size);
     rewind(program);
 
 // TODO this needs to be stored in memory
@@ -716,40 +723,34 @@ int main(int argc, char** argv)
     fread(program_opcodes, sizeof(uint16_t), program_size, program);
     size_t length = program_size / 2;
 
-    printf("Length: %lu\n", length);
+    DEBUG_PRINT("Length: %lu\n", length);
     for (int i = 0; i < length; i++)
     {
-        printf("0x%04x ", program_opcodes[i]);
+        DEBUG_PRINT("0x%04x ", program_opcodes[i]);
     }
-    printf("\n");
+    DEBUG_PRINT("\n");
 
-    //printf("\nAfter big->little endian conversion:\n");
+    //DEBUG_PRINT("\nAfter big->little endian conversion:\n");
     //for (int i = 0; i < length; i++)
     //{
     //    program_opcodes[i] = (program_opcodes[i] >> 8) | (program_opcodes[i] << 8);
-    //    printf("0x%04x ", program_opcodes[i]);
+    //    DEBUG_PRINT("0x%04x ", program_opcodes[i]);
     //}
-    //printf("\n");
+    //DEBUG_PRINT("\n");
 
 
-    printf("Program length: %lu\n", length);
-    /* uint16_t program_counter = 0; */
-    /* while (program_counter < length) */
-    /* { */
-    /*     execute_instruction(program_opcodes[program_counter]); */
-    /*     program_counter++; */
-    /* } */
+    DEBUG_PRINT("Program length: %lu\n", length);
 
     memcpy(&memory[0x200], program_opcodes, sizeof(uint16_t) * length);
     program_counter = 0x200;
 
-    printf("After putting in memory:\n");
+    DEBUG_PRINT("After putting in memory:\n");
     for (int i = 0x200; i < 0x200 + (2 * length); i += 2)
     {
-        // printf("0x%02x%02x ", memory[i+1], memory[i]);
-        printf("0x%02x%02x ", memory[i], memory[i+1]);
+        // DEBUG_PRINT("0x%02x%02x ", memory[i+1], memory[i]);
+        DEBUG_PRINT("0x%02x%02x ", memory[i], memory[i+1]);
     }
-    printf("\n");
+    DEBUG_PRINT("\n");
 
     struct timespec start_time, current_time;
     timespec_get(&start_time, TIME_UTC);
@@ -758,55 +759,26 @@ int main(int argc, char** argv)
     SetTargetFPS(60);
     while (!WindowShouldClose())
     {
-        /* timespec_get(&current_time, TIME_UTC); */
-        /* if (current_time.tv_sec - start_time.tv_sec >= 1) */
-		int i = 0;
+        uint16_t instruction = *(uint16_t*)(memory + program_counter);
+
+        uint8_t inst_low = (uint8_t)(instruction & 0xff);
+        uint8_t inst_high = (uint8_t)((instruction & 0xff00) >> 8);
+
+        instruction = ((uint16_t)inst_low << 8) | (uint16_t)inst_high;
+        execute_instruction(instruction);
+        DEBUG_PRINT("\n");
+
+        BeginDrawing();
+        for (int i = 0; i < WIDTH; i++)
         {
-        /*     start_time = current_time; */
-            /* srand(current_time.tv_sec); */
-            /* int rx = rand() % 64; */
-            /* int ry = rand() % 32; */
-
-            /* memory[0] = 0xF0; */
-            /* memory[1] = 0x90; */
-            /* memory[2] = 0x90; */
-            /* memory[3] = 0x90; */
-            /* memory[4] = 0xF0; */
-
-            /* registers.V[0] = rx; */
-            /* registers.V[1] = rx; */
-			/* uint16_t draw_instruction = create_draw_instruction(0, 1, 5); */
-			/* printf("Draw instruction: 0x%04x\n", draw_instruction); */
-
-            /* I = 0; */
-			if (i++ < 39)
-			{
-
-            /* if (program_counter < 0x200 + (sizeof(uint16_t) * length)) */
-            /* { */
-                uint16_t instruction = *(uint16_t*)(memory + program_counter);
-
-                uint8_t inst_low = (uint8_t)(instruction & 0xff);
-                uint8_t inst_high = (uint8_t)((instruction & 0xff00) >> 8);
-
-                instruction = ((uint16_t)inst_low << 8) | (uint16_t)inst_high;
-                execute_instruction(instruction);
-                printf("\n");
-
-                BeginDrawing();
-                for (int i = 0; i < WIDTH; i++)
-                {
-                    for (int j = 0; j < HEIGHT; j++)
-                    {
-                        Color color = display[i][j] ? BLACK : WHITE;
-                        DrawRectangle(SCALE_FACTOR * i, SCALE_FACTOR * j, SCALE_FACTOR * 8 , SCALE_FACTOR * 1, color);
-                    }
-                }
-                ClearBackground(RAYWHITE);
-                /* DrawText("Congrats! You created your first window!", 190, 200, 20, LIGHTGRAY); */
-                EndDrawing();
+            for (int j = 0; j < HEIGHT; j++)
+            {
+                Color color = display[i][j] ? BLACK : WHITE;
+                DrawRectangle(SCALE_FACTOR * i, SCALE_FACTOR * j, SCALE_FACTOR * 8 , SCALE_FACTOR * 1, color);
             }
         }
+        ClearBackground(RAYWHITE);
+        EndDrawing();
     }
 
     CloseWindow();
