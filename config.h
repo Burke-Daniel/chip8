@@ -1,7 +1,6 @@
 #include <stdbool.h>
 
-bool debug = true;
-
+#define DEBUG
 #define BUILD_DIR "build"
 
 const char *target = "chip8_emulator";
