@@ -79,7 +79,7 @@ int main(int argc, char **argv)
     }
 #endif
     
-    const char *compiler_command = "cd " BUILD_DIR " && cc -D__CMAKEPP_C_CODE -D__CMAKEPP_DONT_COMPILE_MYSELF ";
+    const char *compiler_command = "cd " BUILD_DIR " && gcc -D__CMAKEPP_C_CODE -D__CMAKEPP_DONT_COMPILE_MYSELF ";
     sprintf(compile_command + offset, "%s", compiler_command);
     offset += strlen(compiler_command);
 

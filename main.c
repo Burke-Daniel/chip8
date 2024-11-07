@@ -11,7 +11,11 @@
 #include <time.h>
 #include <unistd.h>
 
-#include "raylib.h"
+#include <raylib.h>
+
+#if defined(PLATFORM_WEB)
+    #include <emscripten/emscripten.h>
+#endif
 
 /* #define DEBUG */
 
@@ -783,27 +787,71 @@ uint16_t create_draw_instruction(uint8_t vx, uint8_t vy, uint8_t n)
 	return opcode | X | Y | N;
 }
 
+bool sound_playing = false;
+
+static void UpdateDrawFrame()
+{
+    // Get keyboard input
+    get_input();
+
+    uint16_t instruction = *(uint16_t*)(memory + program_counter);
+    uint8_t inst_low = (uint8_t)(instruction & 0xff);
+    uint8_t inst_high = (uint8_t)((instruction & 0xff00) >> 8);
+
+    instruction = ((uint16_t)inst_low << 8) | (uint16_t)inst_high;
+    execute_instruction(instruction);
+    DEBUG_PRINT("\n");
+
+    BeginDrawing();
+    for (int i = 0; i < WIDTH; i++)
+    {
+        for (int j = 0; j < HEIGHT; j++)
+        {
+            Color color = display[i][j] ? BLACK : WHITE;
+            DrawRectangle(SCALE_FACTOR * i, SCALE_FACTOR * j, SCALE_FACTOR * 8 , SCALE_FACTOR * 1, color);
+        }
+    }
+    EndDrawing();
+
+    if (delay_timer > 0)
+        delay_timer--;
+
+    if (sound_timer > 0)
+    {
+        if (!sound_playing)
+        {
+            /* PlaySound(beep_timer_sound); */
+            sound_playing = true;
+        }
+        sound_timer--;
+    }
+    else
+    {
+        /* StopSound(beep_timer_sound); */
+        sound_playing = false;
+    }
+}
+
 int main(int argc, char** argv)
 {
-    InitAudioDevice();
-    if (!IsAudioDeviceReady())
-    {
-        DEBUG_PRINT("ERROR: Cound not get audio device ready\n");
-        exit(1);
-    }
+    /* InitAudioDevice(); */
+    /* if (!IsAudioDeviceReady()) */
+    /* { */
+    /*     DEBUG_PRINT("ERROR: Cound not get audio device ready\n"); */
+    /*     exit(1); */
+    /* } */
 
-    bool sound_playing = false;
-    Sound beep_timer_sound = LoadSound("/home/burkey/code/chip8/beep-02.wav");
+    /* Sound beep_timer_sound = LoadSound("/home/burkey/code/chip8/beep-02.wav"); */
 
-    if (!IsSoundReady(beep_timer_sound))
-    {
-        DEBUG_PRINT("ERROR: Could not load beep timer sound\n");
-        exit(1);
-    }
+    /* if (!IsSoundReady(beep_timer_sound)) */
+    /* { */
+    /*     DEBUG_PRINT("ERROR: Could not load beep timer sound\n"); */
+    /*     exit(1); */
+    /* } */
     // 64 by 64
-    InitWindow(WIDTH * SCALE_FACTOR, HEIGHT * SCALE_FACTOR, "raylib [core] example - basic window");
 
-    char* program_name = "";
+    // TODO decide on default ROM
+    char* program_name = "roms/2-IBM-LOGO.ch8";
     if (argc > 1)
     {
         program_name = argv[1];
@@ -859,50 +907,17 @@ int main(int argc, char** argv)
     timespec_get(&start_time, TIME_UTC);
     timespec_get(&current_time, TIME_UTC);
 
+    InitWindow(WIDTH * SCALE_FACTOR, HEIGHT * SCALE_FACTOR, "chip8");
+
+#if defined(PLATFORM_WEB)
+    emscripten_set_main_loop(UpdateDrawFrame, 0, 1);
+#else
     SetTargetFPS(60);
     while (!WindowShouldClose())
     {
-        // Get keyboard input
-        get_input();
-
-        uint16_t instruction = *(uint16_t*)(memory + program_counter);
-        uint8_t inst_low = (uint8_t)(instruction & 0xff);
-        uint8_t inst_high = (uint8_t)((instruction & 0xff00) >> 8);
-
-        instruction = ((uint16_t)inst_low << 8) | (uint16_t)inst_high;
-        execute_instruction(instruction);
-        DEBUG_PRINT("\n");
-
-        BeginDrawing();
-        for (int i = 0; i < WIDTH; i++)
-        {
-            for (int j = 0; j < HEIGHT; j++)
-            {
-                Color color = display[i][j] ? BLACK : WHITE;
-                DrawRectangle(SCALE_FACTOR * i, SCALE_FACTOR * j, SCALE_FACTOR * 8 , SCALE_FACTOR * 1, color);
-            }
-        }
-        ClearBackground(RAYWHITE);
-        EndDrawing();
-
-        if (delay_timer > 0)
-            delay_timer--;
-
-        if (sound_timer > 0)
-        {
-            if (!sound_playing)
-            {
-                PlaySound(beep_timer_sound);
-                sound_playing = true;
-            }
-            sound_timer--;
-        }
-        else
-        {
-            StopSound(beep_timer_sound);
-            sound_playing = false;
-        }
+        UpdateDrawFrame();
     }
+#endif
 
     CloseWindow();
     
