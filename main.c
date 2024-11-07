@@ -26,6 +26,7 @@
 
 #define CHIP8_MEMORY_SIZE 4096U
 #define CHIP8_STACK_SIZE 16U
+#define MAX_PROGRAM_SIZE 2 * 1028
 
 #define BYTE_TO_BINARY_PATTERN "%c%c%c%c%c%c%c%c"
 #define BYTE_TO_BINARY(byte)  \
@@ -822,8 +823,6 @@ int main(int argc, char** argv)
     DEBUG_PRINT("The program is %lu bytes long\n", program_size);
     rewind(program);
 
-// TODO this needs to be stored in memory
-#define MAX_PROGRAM_SIZE 2 * 1028
     uint16_t program_opcodes[MAX_PROGRAM_SIZE];
 
     if (!program_opcodes)
@@ -863,6 +862,7 @@ int main(int argc, char** argv)
     SetTargetFPS(60);
     while (!WindowShouldClose())
     {
+        // Get keyboard input
         get_input();
 
         uint16_t instruction = *(uint16_t*)(memory + program_counter);
