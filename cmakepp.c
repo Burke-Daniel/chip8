@@ -1,5 +1,5 @@
 #ifndef __CMAKEPP_C_CODE
-gcc -D__CMAKEPP_C_CODE -D__CMAKEPP_COMPILE_MYSELF cmakepp.c -o cmakepp && ./cmakepp && rm ./cmakepp
+gcc -D__CMAKEPP_C_CODE -D__CMAKEPP_COMPILE_MYSELF cmakepp.c -o cmakepp && ./cmakepp; rm ./cmakepp
 exit $?
 #endif
 
