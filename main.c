@@ -13,8 +13,9 @@
 
 #include "raylib.h"
 
-#define DEBUG
+/* #define DEBUG */
 
+// TODO error logging as well
 #ifdef DEBUG
 #define DEBUG_PRINT printf
 #else
@@ -229,52 +230,52 @@ void get_input()
 {
     key_state[KEY_ONE] = IsKeyDown(KEY_ONE);
     if (key_state[KEY_ONE])
-        printf("keys.key_one_pressed is true\n");
+        DEBUG_PRINT("keys.key_one_pressed is true\n");
     key_state[KEY_TWO] = IsKeyDown(KEY_TWO);
     if (key_state[KEY_TWO])
-        printf("keys.key_two_pressed is true\n");
+        DEBUG_PRINT("keys.key_two_pressed is true\n");
     key_state[KEY_THREE] = IsKeyDown(KEY_THREE);
     if (key_state[KEY_THREE])
-        printf("keys.key_three_pressed is true\n");
+        DEBUG_PRINT("keys.key_three_pressed is true\n");
     key_state[KEY_FOUR] = IsKeyDown(KEY_FOUR);
     if (key_state[KEY_FOUR])
-        printf("keys.key_four_pressed is true\n");
+        DEBUG_PRINT("keys.key_four_pressed is true\n");
     key_state[KEY_Q] = IsKeyDown(KEY_Q);
     if (key_state[KEY_Q])
-        printf("keys.key_q_pressed is true\n");
+        DEBUG_PRINT("keys.key_q_pressed is true\n");
     key_state[KEY_W] = IsKeyDown(KEY_W);
     if (key_state[KEY_W])
-        printf("keys.key_w_pressed is true\n");
+        DEBUG_PRINT("keys.key_w_pressed is true\n");
     key_state[KEY_E] = IsKeyDown(KEY_E);
     if (key_state[KEY_E])
-        printf("keys.key_e_pressed is true\n");
+        DEBUG_PRINT("keys.key_e_pressed is true\n");
     key_state[KEY_R] = IsKeyDown(KEY_R);
     if (key_state[KEY_R])
-        printf("keys.key_r_pressed is true\n");
+        DEBUG_PRINT("keys.key_r_pressed is true\n");
     key_state[KEY_A] = IsKeyDown(KEY_A);
     if (key_state[KEY_A])
-        printf("keys.key_a_pressed is true\n");
+        DEBUG_PRINT("keys.key_a_pressed is true\n");
     key_state[KEY_S] = IsKeyDown(KEY_S);
     if (key_state[KEY_S])
-        printf("keys.key_s_pressed is true\n");
+        DEBUG_PRINT("keys.key_s_pressed is true\n");
     key_state[KEY_D] = IsKeyDown(KEY_D);
     if (key_state[KEY_D])
-        printf("keys.key_d_pressed is true\n");
+        DEBUG_PRINT("keys.key_d_pressed is true\n");
     key_state[KEY_F] = IsKeyDown(KEY_F);
     if (key_state[KEY_F])
-        printf("keys.key_f_pressed is true\n");
+        DEBUG_PRINT("keys.key_f_pressed is true\n");
     key_state[KEY_Z] = IsKeyDown(KEY_Z);
     if (key_state[KEY_Z])
-        printf("keys.key_z_pressed is true\n");
+        DEBUG_PRINT("keys.key_z_pressed is true\n");
     key_state[KEY_X] = IsKeyDown(KEY_X);
     if (key_state[KEY_X])
-        printf("keys.key_x_pressed is true\n");
+        DEBUG_PRINT("keys.key_x_pressed is true\n");
     key_state[KEY_C] = IsKeyDown(KEY_C);
     if (key_state[KEY_C])
-        printf("keys.key_c_pressed is true\n");
+        DEBUG_PRINT("keys.key_c_pressed is true\n");
     key_state[KEY_V] = IsKeyDown(KEY_V);
     if (key_state[KEY_V])
-        printf("keys.key_v_pressed is true\n");
+        DEBUG_PRINT("keys.key_v_pressed is true\n");
 }
 
 void dump_program(const char *program_name)
@@ -311,41 +312,41 @@ void dump_display_memory()
 
 void execute_instruction(uint16_t opcode)
 {
-    printf("Opcode: 0x%04x\n", opcode);
-    printf("Before program executed, program counter: 0x%04x\n", program_counter);
+    DEBUG_PRINT("Opcode: 0x%04x\n", opcode);
+    DEBUG_PRINT("Before program executed, program counter: 0x%04x\n", program_counter);
 
     if ((opcode & 0xF000) == 0x1000)
     {
-        printf("Found JUMP_ADDR instruction\n");
+        DEBUG_PRINT("Found JUMP_ADDR instruction\n");
         uint16_t value = opcode & 0x0FFF;
-        printf("Setting program counter to %d\n", value);
+        DEBUG_PRINT("Setting program counter to %d\n", value);
         program_counter = value;
     }
     else if ((opcode & 0xF000) == 0x2000)
     {
-        printf("Found CALL instruction\n");
+        DEBUG_PRINT("Found CALL instruction\n");
         uint16_t value = opcode & 0x0FFF;
-        printf("Calling function at address %d\n", value);
-        printf("Pushing address %d to the stack\n", program_counter);
+        DEBUG_PRINT("Calling function at address %d\n", value);
+        DEBUG_PRINT("Pushing address %d to the stack\n", program_counter);
         stack_push(&stack, program_counter);
         program_counter = value;
     }
     else if ((opcode & 0xF000) == 0x3000)
     {
-        printf("Found SE Vx, byte instruction\n");
+        DEBUG_PRINT("Found SE Vx, byte instruction\n");
         uint8_t vx = (opcode & 0x0F00) >> 8;
         uint8_t val = (opcode & 0x00FF);
-        printf("Registers[%d] = %d\n", vx, registers.V[vx]);
-        printf("val = %d\n", val);
+        DEBUG_PRINT("Registers[%d] = %d\n", vx, registers.V[vx]);
+        DEBUG_PRINT("val = %d\n", val);
 
         if (registers.V[vx] == val)
         {
-            printf("register[%d] == %d, skipping next instruction\n", vx, val);
+            DEBUG_PRINT("register[%d] == %d, skipping next instruction\n", vx, val);
             program_counter += 2 * INSTRUCTION_SIZE;
         }
         else
         {
-            printf("register[%d] != %d, not skipping next instruction\n", vx, val);
+            DEBUG_PRINT("register[%d] != %d, not skipping next instruction\n", vx, val);
             program_counter += INSTRUCTION_SIZE;
         }
     }
@@ -392,13 +393,13 @@ void execute_instruction(uint16_t opcode)
     }
     else if ((opcode & 0xF000) == 0x7000)
     {
-        printf("Found ADD Vx, byte instruction\n");
+        DEBUG_PRINT("Found ADD Vx, byte instruction\n");
         uint8_t vx = (opcode & 0x0F00) >> 8;
         uint8_t val = (opcode & 0x00FF);
-        /* printf("Registers[%d] += %d\n", vx, val); */
-        printf("Before Register[%d] = %d\n", vx, registers.V[vx]);
+        /* DEBUG_PRINT("Registers[%d] += %d\n", vx, val); */
+        DEBUG_PRINT("Before Register[%d] = %d\n", vx, registers.V[vx]);
         registers.V[vx] += val;
-        printf("After Register[%d] = %d\n", vx, registers.V[vx]);
+        DEBUG_PRINT("After Register[%d] = %d\n", vx, registers.V[vx]);
         program_counter += INSTRUCTION_SIZE;
     }
     else if ((opcode & 0xF000) == 0x8000)
@@ -535,9 +536,9 @@ void execute_instruction(uint16_t opcode)
     }
     else if ((opcode & 0xF000) == 0xB000)
     {
-        printf("Found JP V0, addr instruction\n");
+        DEBUG_PRINT("Found JP V0, addr instruction\n");
         uint16_t val = opcode & 0x0FFF;
-        printf("program_counter = registers[0] + %d\n", val);
+        DEBUG_PRINT("program_counter = registers[0] + %d\n", val);
         program_counter = registers.V0 + val;
     }
     else if ((opcode & 0xF000) == 0xC000)
@@ -551,7 +552,7 @@ void execute_instruction(uint16_t opcode)
     }
     else if ((opcode & 0xF000) == 0xD000)
     {
-        printf("Draw: Before doing draw, PC=0x%x\n", program_counter);
+        DEBUG_PRINT("Draw: Before doing draw, PC=0x%x\n", program_counter);
 
 		uint8_t target_v_reg_x = (opcode & 0x0F00) >> 8;
 		uint8_t target_v_reg_y = (opcode & 0x00F0) >> 4;
@@ -559,13 +560,13 @@ void execute_instruction(uint16_t opcode)
 		uint8_t x_location = registers.V[target_v_reg_x];
 		uint8_t y_location = registers.V[target_v_reg_y];
 
-        printf("Drawing at x=%d y=%d using memory starting at I=0x%x\n", x_location, y_location, I);
+        DEBUG_PRINT("Drawing at x=%d y=%d using memory starting at I=0x%x\n", x_location, y_location, I);
 
 		registers.VF = 0;
         for (int32_t i = 0; i < sprite_height; i++)
         {
             uint8_t sprite = memory[I + i];
-            printf("Sprite is located at address %d\n", I + i);
+            DEBUG_PRINT("Sprite is located at address %d\n", I + i);
             DEBUG_PRINT("Sprite: 0x%x\n", sprite);
 
             for (size_t j = 0; j < 8; j++)
@@ -590,10 +591,10 @@ void execute_instruction(uint16_t opcode)
             }
         }
 
-        printf("Draw: Adding two to program counter\n");
-        printf("Before: 0x%x\n", program_counter);
+        DEBUG_PRINT("Draw: Adding two to program counter\n");
+        DEBUG_PRINT("Before: 0x%x\n", program_counter);
         program_counter += INSTRUCTION_SIZE;
-        printf("After: 0x%x\n", program_counter);
+        DEBUG_PRINT("After: 0x%x\n", program_counter);
     }
     else if ((opcode & 0xF0FF) == 0xE09E)
     {
@@ -625,9 +626,9 @@ void execute_instruction(uint16_t opcode)
     }
     else if ((opcode & 0xF000) == 0xF000)
     {
-        printf("Found instruction that starts with F\n");
+        DEBUG_PRINT("Found instruction that starts with F\n");
         uint16_t sub_word = opcode & 0x00FF;
-        printf("Subword is 0x%x\n", sub_word);
+        DEBUG_PRINT("Subword is 0x%x\n", sub_word);
         switch (sub_word)
         {
             case 0x07:
@@ -641,19 +642,19 @@ void execute_instruction(uint16_t opcode)
             }
             case 0x0A:
             {
-                printf("Found LD Vx, K instruction\n");
+                DEBUG_PRINT("Found LD Vx, K instruction\n");
                 uint8_t vx = (opcode & 0x0F00) >> 0x8;
                 DEBUG_PRINT("Waiting for keypress to store in registers[%d]\n", vx);
 
                 // TODO need to make sure the key that is pressed is a chip8 key
                 int key = 0;
                 bool key_pressed = false;
-                printf("Size of the key_state array is %d\n", ARRAY_SIZE(key_state));
+                DEBUG_PRINT("Size of the key_state array is %d\n", ARRAY_SIZE(key_state));
                 for (size_t i = 0; i < ARRAY_SIZE(key_state); i++)
                 {
                     if (key_state[i])
                     {
-                        printf("Key %d is pressed", i);
+                        DEBUG_PRINT("Key %d is pressed", i);
                         key = i;
                         key_pressed = true;
                         break;
@@ -752,9 +753,9 @@ void execute_instruction(uint16_t opcode)
         }
         case 0x00EE:
         {
-            printf("Found RETURN_SUBROUTINE instruction\n");
+            DEBUG_PRINT("Found RETURN_SUBROUTINE instruction\n");
             program_counter = stack_pop(&stack);
-            printf("Setting program_counter back to %d and incrementing\n", program_counter);
+            DEBUG_PRINT("Setting program_counter back to %d and incrementing\n", program_counter);
             program_counter += INSTRUCTION_SIZE;
             break;
         }
@@ -766,10 +767,10 @@ void execute_instruction(uint16_t opcode)
     }
     else
     {
-        printf("Invalid instruction 0x%x\n", opcode);
+        DEBUG_PRINT("Invalid instruction 0x%x\n", opcode);
         exit(1);
     }
-    printf("After instruction executed, program counter: 0x%04x\n", program_counter);
+    DEBUG_PRINT("After instruction executed, program counter: 0x%04x\n", program_counter);
 }
 
 uint16_t create_draw_instruction(uint8_t vx, uint8_t vy, uint8_t n)
@@ -786,7 +787,7 @@ int main(int argc, char** argv)
     InitAudioDevice();
     if (!IsAudioDeviceReady())
     {
-        printf("ERROR: Cound not get audio device ready\n");
+        DEBUG_PRINT("ERROR: Cound not get audio device ready\n");
         exit(1);
     }
 
@@ -795,7 +796,7 @@ int main(int argc, char** argv)
 
     if (!IsSoundReady(beep_timer_sound))
     {
-        printf("ERROR: Could not load beep timer sound\n");
+        DEBUG_PRINT("ERROR: Could not load beep timer sound\n");
         exit(1);
     }
     // 64 by 64
