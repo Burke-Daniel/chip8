@@ -787,6 +787,7 @@ uint16_t create_draw_instruction(uint8_t vx, uint8_t vy, uint8_t n)
 	return opcode | X | Y | N;
 }
 
+Sound beep_timer_sound;
 bool sound_playing = false;
 
 static void UpdateDrawFrame()
@@ -820,38 +821,31 @@ static void UpdateDrawFrame()
     {
         if (!sound_playing)
         {
-            /* PlaySound(beep_timer_sound); */
+            PlaySound(beep_timer_sound);
             sound_playing = true;
         }
         sound_timer--;
     }
     else
     {
-        /* StopSound(beep_timer_sound); */
+        StopSound(beep_timer_sound);
         sound_playing = false;
     }
 }
 
 int main(int argc, char** argv)
 {
-    /* InitAudioDevice(); */
-    /* if (!IsAudioDeviceReady()) */
-    /* { */
-    /*     DEBUG_PRINT("ERROR: Cound not get audio device ready\n"); */
-    /*     exit(1); */
-    /* } */
+    InitAudioDevice();
+    if (!IsAudioDeviceReady())
+    {
+        DEBUG_PRINT("ERROR: Cound not get audio device ready\n");
+        exit(1);
+    }
 
-    /* Sound beep_timer_sound = LoadSound("/home/burkey/code/chip8/beep-02.wav"); */
-
-    /* if (!IsSoundReady(beep_timer_sound)) */
-    /* { */
-    /*     DEBUG_PRINT("ERROR: Could not load beep timer sound\n"); */
-    /*     exit(1); */
-    /* } */
-    // 64 by 64
+    beep_timer_sound = LoadSound("beep-02.wav");
 
     // TODO decide on default ROM
-    char* program_name = "roms/2-IBM-LOGO.ch8";
+    char* program_name = "roms/morse_demo.ch8";
     if (argc > 1)
     {
         program_name = argv[1];
