@@ -1,7 +1,6 @@
 // TODO feature list:
-// - Work on input
-// - Would be cool to have a graphical menu
-//   that you can load programs from
+// - Presets in web menu
+// - make an equivalent menu for native implementation
 
 
 #include <stdio.h>
@@ -579,12 +578,12 @@ void execute_instruction(uint16_t opcode)
 
             for (size_t j = 0; j < 8; j++)
             {
-                DEBUG_PRINT("Drawing X %d Y %d\n", y_location + i + 1, x_location + j);
+                DEBUG_PRINT("Drawing X %d Y %d\n", y_location + i, x_location + j);
                 bool bit = sprite & (1 << (7-j));
                 DEBUG_PRINT("Bit at %d is %d\n", j, bit);
 
                 uint8_t x = (x_location + j) % WIDTH;
-                uint8_t y = (y_location + i + 1) % HEIGHT;
+                uint8_t y = (y_location + i) % HEIGHT;
 
                 bool previous_display_value = display[x][y];
 
@@ -730,19 +729,33 @@ void execute_instruction(uint16_t opcode)
             }
             case 0x55:
             {
+                // Store v0 through vx into memory locations starting from I
+
                 DEBUG_PRINT("Found LD [I], Vx instruction\n");
                 uint8_t vx = (opcode & 0x0F00) >> 0x8;
-                DEBUG_PRINT("Storing V0 to V%d in memory\n", vx);
-                memcpy(&memory[I], &registers.V[0], sizeof(registers.V[0]) * vx);
+
+                for (uint8_t i = 0; i <= vx; i++)
+                {
+                    DEBUG_PRINT("Storing %x into memory at %x", registers.V[i], I + i);
+                    memory[I + i] = registers.V[i];
+                }
+
                 program_counter += INSTRUCTION_SIZE;
                 break;
             }
             case 0x65:
             {
+                // Load v0 through vx from memory locations starting at I
+
                 DEBUG_PRINT("Found LD Vx, [I] instruction\n");
                 uint8_t vx = (opcode & 0x0F00) >> 0x8;
-                DEBUG_PRINT("Loading V0 to V%d from memory\n", vx);
-                memcpy(&registers.V[0], &memory[I], sizeof(registers.V[0]) * vx);
+
+                for (uint8_t i = 0; i <= vx; i++)
+                {
+                    DEBUG_PRINT("Copying %x into V[%x]", memory[I + i], i);
+                    registers.V[i] = memory[I + i];
+                }
+
                 program_counter += INSTRUCTION_SIZE;
                 break;
             }
