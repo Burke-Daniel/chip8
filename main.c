@@ -15,6 +15,9 @@
 
 #if defined(PLATFORM_WEB)
     #include <emscripten/emscripten.h>
+    #define EMSCRIPTEN_API extern EMSCRIPTEN_KEEPALIVE
+#else
+    #define EMSCRIPTEN_API
 #endif
 
 // #define DEBUG
@@ -791,16 +794,17 @@ Sound beep_timer_sound;
 bool sound_playing = false;
 
 uint16_t* program_opcodes;
-size_t length;
 
 static void UpdateDrawFrame()
 {
+#ifdef PLATFORM_WEB
     if (program_opcodes == NULL)
     {
         printf("Waiting for ROM file to get set\n");
         emscripten_pause_main_loop();
         return;
     }
+#endif
 
     // Get keyboard input
     get_input();
@@ -844,12 +848,11 @@ static void UpdateDrawFrame()
 }
 
 // Responsibility of caller to malloc and free data
-extern EMSCRIPTEN_KEEPALIVE
+EMSCRIPTEN_API
 void set_rom(uint8_t* data, int length)
 {
     printf("Setting ROM to %p with length %d\n", data, length);
     program_opcodes = (uint16_t*)data;
-    length = length;
 
     printf("Dumping out bytes:\n");
     for (size_t i = 0; i < length; i++)
@@ -861,12 +864,9 @@ void set_rom(uint8_t* data, int length)
     program_counter = 0x200;
     stack.stack_pointer = 0;
 
+#ifdef PLATFORM_WEB
     emscripten_resume_main_loop();
-}
-
-void set_rom_from_file(FILE* file)
-{
-    // TODO
+#endif
 }
 
 int main(int argc, char** argv)
@@ -881,58 +881,34 @@ int main(int argc, char** argv)
 
     beep_timer_sound = LoadSound("beep-02.wav");
 
+#ifndef PLATFORM_WEB
     // TODO decide on default ROM
-    // char* program_name = "roms/morse_demo.ch8";
-    // if (argc > 1)
-    // {
-    //     program_name = argv[1];
-    // }
+    char* program_name = "roms/morse_demo.ch8";
+    if (argc > 1)
+    {
+        program_name = argv[1];
+    }
 
-    // memcpy(memory, hex_sprites, sizeof(hex_sprites));
+    memcpy(memory, hex_sprites, sizeof(hex_sprites));
 
-    // FILE* program = fopen(program_name, "r");
-    // if (program == NULL)
-    // {
-    //     fprintf(stderr, "Could not open program %s\n", program_name);
-    //     return 1;
-    // }
+    FILE* program = fopen(program_name, "r");
+    if (program == NULL)
+    {
+        fprintf(stderr, "Could not open program %s\n", program_name);
+        return 1;
+    }
 
-    // fseek(program, 0L, SEEK_END);
-    // size_t program_size = ftell(program);
-    // DEBUG_PRINT("The program is %lu bytes long\n", program_size);
-    // rewind(program);
+    fseek(program, 0L, SEEK_END);
+    size_t program_size = ftell(program);
+    DEBUG_PRINT("The program is %lu bytes long\n", program_size);
+    rewind(program);
 
-    // uint16_t program_opcodes[MAX_PROGRAM_SIZE];
+    uint16_t program_data[MAX_PROGRAM_SIZE];
+    fread(program_data, sizeof(program_data[0]), program_size, program);
 
-    // if (!program_opcodes)
-    // {
-    //     fprintf(stderr, "Could not malloc memory\n");
-    //     return false;
-    // }
+    set_rom((uint8_t*)program_data, program_size);
 
-    // fread(program_opcodes, sizeof(uint16_t), program_size, program);
-    // size_t length = program_size / 2;
-
-    // DEBUG_PRINT("Length: %lu\n", length);
-    // for (int i = 0; i < length; i++)
-    // {
-    //     DEBUG_PRINT("0x%04x ", program_opcodes[i]);
-    // }
-    // DEBUG_PRINT("\n");
-
-    // DEBUG_PRINT("Program length: %lu\n", length);
-
-    // memcpy(&memory[0x200], program_opcodes, sizeof(uint16_t) * length);
-    // program_counter = 0x200;
-
-    // stack.stack_pointer = 0;
-
-    // DEBUG_PRINT("After putting in memory:\n");
-    // for (int i = 0x200; i < 0x200 + (2 * length); i += 2)
-    // {
-    //     DEBUG_PRINT("0x%02x%02x ", memory[i], memory[i+1]);
-    // }
-    // DEBUG_PRINT("\n");
+#endif
 
     struct timespec start_time, current_time;
     timespec_get(&start_time, TIME_UTC);
