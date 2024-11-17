@@ -1,0 +1,67 @@
+<!doctype html>
+<html lang="EN-us">
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+
+    <title>raylib web game</title>
+
+    <meta name="title" content="raylib web game">
+    <meta name="description" content="New raylib web videogame, developed using raylib videogames library">
+    <meta name="keywords" content="raylib, programming, examples, html5, C, C++, library, learn, games, videogames">
+    <meta name="viewport" content="width=device-width">
+
+  </head>
+  <body>
+    <input type="file" id="fileInput" value="Pick ROM"></button>
+    <canvas class="game" id="canvas" oncontextmenu="event.preventDefault()"></canvas>
+    <script type='text/javascript'>
+      console.log("Hiding canvas");
+      const canvas = document.getElementById("canvas");
+      canvas.style.display = 'none';
+      var Module = {
+        preRun: [],
+        postRun: [],
+        print: (function() {
+            return function(text) {
+                text = Array.prototype.slice.call(arguments).join(' ');
+                console.log(text);
+            };
+        })(),
+        printErr: function(text) {
+            text = Array.prototype.slice.call(arguments).join(' ');
+            console.error(text);
+        },
+        canvas: (function() {
+            var canvas = document.getElementById('canvas');
+            return canvas;
+        })(),
+        setStatus: function(text) { },
+        monitorRunDependencies: function(left) { },
+      };
+      window.onerror = function() {
+        console.log("onerror: " + event.message);
+      };
+
+      const fileInput = document.getElementById("fileInput");
+      fileInput.addEventListener("change", function(event) {
+        const file = event.target.files[0];
+
+        const reader = new FileReader();
+        reader.onload = function(e) {
+          const fileBytes = e.target.result;
+          const uint8_buffer = new Uint8Array(fileBytes);
+
+          const buffer = Module._malloc(uint8_buffer.length*uint8_buffer.BYTES_PER_ELEMENT);
+          Module.HEAPU8.set(uint8_buffer, buffer);
+          Module._set_rom(buffer, uint8_buffer.length);
+
+          document.getElementById("fileInput").style.display = "none";
+          document.getElementById("canvas").style.display = "block";
+        };
+        reader.readAsArrayBuffer(file);
+      });
+    </script>
+    {{{ SCRIPT }}}
+  </body>
+</html>
