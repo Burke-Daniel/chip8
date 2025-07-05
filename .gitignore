@@ -1,4 +1,7 @@
 *.swp
 *.out
+.DS_Store
+chip8
+index.*
 build/
 compile_commands.json
